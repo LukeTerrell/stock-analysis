@@ -1,3 +1,43 @@
+Sub formatAllStocksAnalysis()
+    
+    'Formatting
+    Worksheets("All Stocks Analysis").Activate
+    Range("A3:C3").Font.Bold = True
+    Range("A3:C3").Borders(xlEdgeBottom).LineStyle = xlContinuous
+    Range("B4:B15").NumberFormat = "#,##0"
+    Range("C2:C15").NumberFormat = "0.0%"
+    Columns("B").AutoFit
+    
+    dataRowStart = 4
+    dataRowEnd = 15
+    For i = dataRowStart To dataRowEnd
+        
+        If Cells(i, 3).Value > 0 Then
+        
+            'Color cell green
+            Cells(i, 3).Interior.Color = vbGreen
+            
+        ElseIf Cells(i, 3).Value < 0 Then
+        
+            'Color cell red
+            Cells(i, 3).Interior.Color = vbRed
+        
+        Else
+            
+            'Clear cell color
+            Cells(i, 3).Interior.Color = xlNone
+            
+        End If
+    Next i
+
+End Sub
+
+Sub ClearWorksheet()
+
+    Cells.Clear
+    
+End Sub
+
 Sub AllStocksAnalysisRefactored()
     Dim startTime As Single
     Dim endTime  As Single
@@ -39,47 +79,50 @@ Sub AllStocksAnalysisRefactored()
     RowCount = Cells(Rows.Count, "A").End(xlUp).Row
     
     '1a) Create a ticker Index
-    
+    tickerIndex = 0
 
-    '1b) Create three output arrays   
+    '1b) Create three output arrays
+    Dim tickerVolumes(12) As Long
+    Dim tickerStartingPrices(12) As Single
+    Dim tickerEndingPrices(12) As Single
     
+    ''2a) Create a for loop to initialize the tickerVolumes to zero.
+    For j = 1 To 12
+        tickerVolumes(tickerIndex) = 0
+
+    ''2b) Loop over all the rows in the spreadsheet.
+        For i = 2 To RowCount
     
-    ''2a) Create a for loop to initialize the tickerVolumes to zero. 
-    
-        
-    ''2b) Loop over all the rows in the spreadsheet. 
-    For i = 2 To RowCount
-    
-        '3a) Increase volume for current ticker
-        
-        
+            '3a) Increase volume for current ticker
+            If Cells(i, 1) = tickers(tickerIndex) Then
+                tickerVolumes(tickerIndex) = tickerVolumes(tickerIndex) + Cells(i, 8).Value
+            End If
         '3b) Check if the current row is the first row with the selected tickerIndex.
-        'If  Then
-            
-            
-            
-        'End If
+            If Cells(i, 1).Value = tickers(tickerIndex) And Cells(i - 1, 1).Value <> tickers(tickerIndex) Then
+                tickerStartingPrices(tickerIndex) = Cells(i, 6).Value
+            End If
         
         '3c) check if the current row is the last row with the selected ticker
+            If Cells(i, 1).Value = tickers(tickerIndex) And Cells(i + 1, 1).Value <> tickers(tickerIndex) Then
+                tickerEndingPrices(tickerIndex) = Cells(i, 6).Value
+            End If
          'If the next row’s ticker doesn’t match, increase the tickerIndex.
-        'If  Then
-            
-            
-
-            '3d Increase the tickerIndex. 
-            
-            
-        'End If
+            '3d Increase the tickerIndex.
+        Next i
     
-    Next i
+        tickerIndex = tickerIndex + 1
+    Next j
     
     '4) Loop through your arrays to output the Ticker, Total Daily Volume, and Return.
-    For i = 0 To 11
+    For k = 0 To 11
         
         Worksheets("All Stocks Analysis").Activate
+        tickerIndex = k
+        Cells(4 + tickerIndex, 1).Value = tickers(tickerIndex)
+        Cells(4 + tickerIndex, 2).Value = tickerVolumes(tickerIndex)
+        Cells(4 + tickerIndex, 3).Value = (tickerEndingPrices(tickerIndex) / tickerStartingPrices(tickerIndex)) - 1
         
-        
-    Next i
+    Next k
     
     'Formatting
     Worksheets("All Stocks Analysis").Activate
@@ -92,19 +135,14 @@ Sub AllStocksAnalysisRefactored()
     dataRowStart = 4
     dataRowEnd = 15
 
-    For i = dataRowStart To dataRowEnd
-        
-        If Cells(i, 3) > 0 Then
-            
-            Cells(i, 3).Interior.Color = vbGreen
-            
+    For l = dataRowStart To dataRowEnd
+        If Cells(l, 3) > 0 Then
+            Cells(l, 3).Interior.Color = vbGreen
         Else
-        
-            Cells(i, 3).Interior.Color = vbRed
-            
+            Cells(l, 3).Interior.Color = vbRed
         End If
         
-    Next i
+    Next l
  
     endTime = Timer
     MsgBox "This code ran in " & (endTime - startTime) & " seconds for the year " & (yearValue)
